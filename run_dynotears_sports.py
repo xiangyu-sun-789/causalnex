@@ -45,14 +45,25 @@ if __name__ == "__main__":
 
     # p: Number of past interactions we allow the model to create. The state of a variable at time `t` is
     # affected by past variables up to a `t-p`, as well as by other variables at `t`.
-    estimated_DAG = dynotears.from_pandas_dynamic(normalized_data_df, p=1)
+    estimated_DAG = dynotears.from_pandas_dynamic(normalized_data_df, p=1, h_tol=1e-60)
 
-    # estimated_DAG.remove_edges_below_threshold(0.8)
+    # remove edges that are too weak
+    estimated_DAG.remove_edges_below_threshold(0.01)
+
+    # show edges with high weight coefficients thicker.
+    edge_attributes = {
+        (u, v): {
+            "penwidth": w * 20 + 2,  # Setting edge thickness
+            "arrowsize": 2 - 2.0 * w,  # Avoid too large arrows
+        }
+        for u, v, w in estimated_DAG.edges(data="weight")
+    }
 
     viz = plot_structure(
         estimated_DAG,
         prog='dot',
-        graph_attributes={"nodesep": 1},  # separation between nodes with same rank
+        graph_attributes={"nodesep": 1.1},  # separation between nodes with same rank
+        edge_attributes=edge_attributes,
         all_node_attributes=NODE_STYLE.WEAK,
         all_edge_attributes=EDGE_STYLE.WEAK)
 
